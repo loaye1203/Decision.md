@@ -1,113 +1,81 @@
 # Decision.md
 
-`Decision.md` is a small global rule for Codex that adds a manual configuration checkpoint before execution.
+Decision 3.0 is a pre-execution configuration checkpoint for Codex. It recommends a model and reasoning level for the upcoming task, then waits for you to apply the settings and confirm execution.
 
-When a task will change files or external state, Codex evaluates the work, recommends one model and one reasoning level, and stops. You apply the recommendation manually and confirm before Codex begins execution.
+## Features
 
-The rule is designed to choose a configuration that is sufficient for the task instead of always defaulting to the strongest model or highest reasoning level.
+- Evaluates scope clarity, difficulty, risk, verification, context, and relevant failures.
+- Considers GPT-5.6 Luna, Terra, Sol, and GPT-6 Astra across five reasoning levels: twenty candidate combinations when available.
+- Compares smaller models with deeper reasoning against stronger models with lighter reasoning.
+- Distinguishes token counts, token rates, and total usage including retries.
+- Preserves manual configuration and project approval requirements.
 
-## What it does
+Read-only discussion, research, planning, and review proceed normally. The checkpoint applies before file changes, installation, publication, deployment, or other state-changing actions.
 
-- Runs before implementation and other state-changing actions
-- Does not run for discussion, explanation, research, planning, review, or other read-only work
-- Evaluates task clarity, difficulty, risk, verification, context, and earlier failures
-- Selects the model and reasoning level separately
-- Gives one concise recommendation in a fixed format
-- Waits for the user to switch the configuration and approve execution
-- Re-evaluates only when the task or its risk changes materially
+## Choosing a configuration
 
-## What it does not do
-
-- It does not switch the model automatically.
-- It does not perform implementation during the recommendation step.
-- It does not expand or redesign the user's request.
-- It does not replace project permissions, safety rules, or destructive-action confirmations.
-- It does not assume that a larger task always needs a stronger model.
-
-## How configuration is selected
-
-Decision considers six factors:
-
-| Factor | Question |
+| Model | Typical fit |
 | --- | --- |
-| Clarity | Are the scope, result, and acceptance criteria clear? |
-| Difficulty | Is the work mechanical, ordinary, or deeply analytical? |
-| Risk | How serious and reversible would a mistake be? |
-| Verification | Can tests, builds, checks, or exact comparisons confirm the result? |
-| Context | How much code and prior state must remain coherent? |
-| Failure history | Has a lower configuration already failed for a reasoning-related cause? |
+| GPT-5.6 Luna | Clear, bounded, repeatable work with reliable checks |
+| GPT-5.6 Terra | Everyday engineering, integrations, refactoring, and ordinary debugging |
+| GPT-5.6 Sol | Complex analysis, open-ended design, difficult diagnosis, and synthesis |
+| GPT-6 Astra | Demanding end-to-end work across systems, tools, changing constraints, and long context |
 
-Task size is not enough by itself. A large mechanical change with strong tests may use a smaller model, while a small security-sensitive change with weak verification may need a stronger one.
+| Reasoning label | Effort | Typical need |
+| --- | --- | --- |
+| 轻度 | low | Clear approach with limited exploration |
+| 中 | medium | Ordinary planning, decisions, and verification |
+| 高 | high | Multiple hypotheses, edge cases, or substantial checking |
+| 极高 | xhigh | Deeply interacting uncertainties and extensive analysis |
+| 更高（消耗更多使用额度） | max | Exceptional problems where additional exploration is likely to help |
 
-### Model guide
+These are task-selection guidelines, not benchmark rankings. Every available model-and-effort combination remains eligible. Decision does not assume that Astra low equals Luna high, or that the newest model always wins at every effort.
 
-| Model | Best fit |
-| --- | --- |
-| GPT-5.6 Luna | Clear, bounded, low-risk, strongly verified work; mechanical edits; implementation from a complete plan |
-| GPT-5.6 Terra | Everyday engineering, ordinary multi-file changes, moderate debugging, and manageable ambiguity |
-| GPT-5.6 Sol | Difficult diagnosis, ambiguous architecture, high-risk systems, weak verification, or sustained cross-system reasoning |
+The process first assesses the required reliability, chooses a model and effort candidate, and then compares plausible alternatives. Quality requirements come first; usage preferences help choose among suitable configurations.
 
-### Reasoning guide
-
-| Level | Best fit |
-| --- | --- |
-| 轻度 | Direct, localized, low-risk work with strong verification |
-| 中 | Normal implementation and bounded debugging with a known approach |
-| 高 | Cross-file reasoning, root-cause analysis, edge cases, compatibility, or careful verification |
-| 极高 | Several interacting uncertainties, such as architecture, concurrency, security, or complex migrations |
-| 更高（消耗更多使用额度） | Exceptional quality-first work where extended exploration can materially change the outcome |
-
-Higher reasoning is not automatically better. Decision uses the lowest configuration that is still expected to meet the task's reliability needs.
+Ultra is considered separately as a delegation mode when available and authorized. It is not one of the five ordinary reasoning levels.
 
 ## Workflow
 
-1. You ask Codex to perform a task.
-2. If the task is read-only, Codex proceeds normally.
-3. If the task changes state, Codex reads `Decision.md` and evaluates only the upcoming execution.
-4. Codex briefly explains the deciding factor.
-5. The final line contains the recommendation:
+1. Describe the task.
+2. For a state-changing task, Codex reads the rule and briefly explains the deciding factor.
+3. Its final line gives exactly one recommendation, for example:
 
    ```text
    GPT-5.6 Terra，思考等级中
    ```
 
-6. Codex stops without implementing anything.
-7. You manually apply the recommended model and reasoning level, then confirm execution.
-8. Codex performs the task under the normal project permissions and safety rules.
+4. Codex stops. You manually select the configuration and confirm execution.
+5. Codex performs the approved work under the project's existing permissions.
 
-If the requirements, risk, or available configurations change materially before execution, Codex runs the decision step again.
+A materially changed workload or newly discovered capability gap triggers re-evaluation. Routine continuation does not require another checkpoint.
 
-## Install globally
+## Install
 
-1. Download [`Decision.md`](./Decision.md).
+Download [Decision.md](./Decision.md) and place it in your Codex Home directory. For the Windows setup used here:
 
-2. Put it in your Codex Home directory. On Windows, the default location is:
+```text
+C:\Users\<YourUser>\.codex\Decision.md
+```
 
-   ```text
-   C:\Users\<YourUser>\.codex\Decision.md
-   ```
+Add the following instruction to your global `AGENTS.md` in the same directory, substituting your actual absolute path:
 
-3. Create or edit the global `AGENTS.md` in the same directory:
+```text
+Before beginning any implementation or other state-changing task, you MUST read `C:\Users\<YourUser>\.codex\Decision.md`, complete the decision process it defines, output the recommended execution configuration, and wait for the user to confirm before execution. If the file cannot be read, stop and report the exact path attempted.
+```
 
-   ```text
-   C:\Users\<YourUser>\.codex\AGENTS.md
-   ```
+If your Codex Home location differs, use that location for both files and the instruction. Preserve any existing instructions in `AGENTS.md`. Start a new task after changing global instructions.
 
-4. Add the following instruction, replacing `<YourUser>` with your Windows user name:
+To update, review your local customizations and replace `Decision.md` with the desired version. Downloading or updating this repository alone does not install the rule globally.
 
-   ```text
-   Before beginning any implementation or other state-changing task, you MUST read `C:\Users\<YourUser>\.codex\Decision.md`, complete the decision process it defines, output the recommended execution configuration, and wait for the user to confirm before execution. If the file cannot be read, stop and report the exact path attempted.
-   ```
+## Limits
 
-5. Start a new Codex task so the global `AGENTS.md` guidance is loaded.
+The rule recommends settings; it does not switch models, grant permissions, enable Ultra, or guarantee correctness or savings. Only configurations available in your client are eligible.
 
-## Updating
-
-Replace the global `Decision.md` with the newer repository version, then start a new Codex task. Existing tasks may continue using instructions that were loaded when they started.
-
-Review local customizations before replacing the file. The repository update does not change your Codex configuration automatically.
+Model-and-effort examples are guidelines rather than measured equivalences. Actual token use and total cost depend on the task, context, checks, tools, and retries.
 
 ## Versions
 
-- [`main`](https://github.com/loaye1203/Decision.md/blob/main/Decision.md) contains the current Decision 2.0 rule.
-- [`v1.0`](https://github.com/loaye1203/Decision.md/tree/v1.0) preserves the original Decision 1.0 rule and README.
+- [Current Decision 3.0](./Decision.md): four models, twenty combinations, cross-model comparison, and usage-aware selection.
+- [Decision 2.0](https://github.com/loaye1203/Decision.md/tree/v2.0): the previous three-model rule and README.
+- [Decision 1.0](https://github.com/loaye1203/Decision.md/tree/v1.0): the original confirmation workflow.
